@@ -1,111 +1,98 @@
 import React from 'react';
-import { Platform, StatusBar, StyleSheet, View } from 'react-native';
-import { AppLoading, Asset, Font } from 'expo';
-import { Ionicons } from '@expo/vector-icons';
-import RootNavigation from './navigation/RootNavigation';
-import Notification from './components/Notification'
-import * as firebase from 'firebase'
-import Fire from './api/Fire'
-const _ = require("lodash");
+import { StatusBar } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { GameProvider } from './src/context/GameContext';
+import Colors from './src/constants/Colors';
 
-export default class App extends React.Component {
-  state = {
-    isLoadingComplete: false,
-  };
+// Screens
+import MainMenuScreen from './src/screens/MainMenuScreen';
+import CreateGameScreen from './src/screens/CreateGameScreen';
+import JoinGameScreen from './src/screens/JoinGameScreen';
+import GameScreen from './src/screens/GameScreen';
+import GameOverScreen from './src/screens/GameOverScreen';
+import ScriptBrowserScreen from './src/screens/ScriptBrowserScreen';
+import HowToPlayScreen from './src/screens/HowToPlayScreen';
 
-  componentDidMount() {
-      firebase.auth().onAuthStateChanged((user) => {
-        if (!user) {
-          return;
-        }
-        let node = Fire.shared.userNode();
-        node.on("value", (snapshot) => {
-            this.setState({ user: snapshot.val() });
-        });
-      });
-  }
+const Stack = createNativeStackNavigator();
 
-  render() {
-    var notificationDiv = <View />
-    if (this.state.user && this.state.user.getting_doxxed) {
-      var alertKey = _.sortBy(_.keys(this.state.user.alerts))[0];
-      var alert = this.state.user.alerts[alertKey];
-      notificationDiv = <Notification style={styles.notification}
-        pressedYes={() => {
-            Fire.shared.doxx(alertKey);
-            Fire.shared.userNode().child("getting_doxxed").set(false);
+const screenOptions = {
+  headerStyle: {
+    backgroundColor: Colors.background,
+  },
+  headerTintColor: Colors.text,
+  headerTitleStyle: {
+    fontWeight: 'bold',
+  },
+  headerShadowVisible: false,
+  contentStyle: {
+    backgroundColor: Colors.background,
+  },
+  animation: 'slide_from_right',
+};
+
+export default function App() {
+  return (
+    <GameProvider>
+      <NavigationContainer
+        theme={{
+          dark: true,
+          colors: {
+            primary: Colors.accent,
+            background: Colors.background,
+            card: Colors.surface,
+            text: Colors.text,
+            border: Colors.border,
+            notification: Colors.evil,
+          },
         }}
-        pressedNo={() => {
-            Fire.shared.userNode().child("getting_doxxed").set(false);
-        }}
-        title={"New Dox - Counter?"}
-        subtitle={alert.tweet}
-      />
-    }
-
-    if (!this.state.isLoadingComplete && !this.props.skipLoadingScreen) {
-      return (
-        <AppLoading
-          startAsync={this._loadResourcesAsync}
-          onError={this._handleLoadingError}
-          onFinish={this._handleFinishLoading}
-        />
-      );
-    } else {
-      return (
-        <View style={styles.container}>
-          {Platform.OS === 'ios' && <StatusBar barStyle="default" />}
-          {Platform.OS === 'android' && <View style={styles.statusBarUnderlay} />}
-          <RootNavigation />
-          { notificationDiv }
-        </View>
-      );
-    }
-  }
-
-  _loadResourcesAsync = async () => {
-    return Promise.all([
-      Asset.loadAsync([
-        require('./assets/images/robot-dev.png'),
-        require('./assets/images/robot-prod.png'),
-      ]),
-      Font.loadAsync({
-        // This is the font that we are using for our tab bar
-        ...Ionicons.font,
-        // We include SpaceMono because we use it in HomeScreen.js. Feel free
-        // to remove this if you are not using it in your app
-        'space-mono': require('./assets/fonts/SpaceMono-Regular.ttf'),
-      }),
-    ]);
-  };
-
-  _handleLoadingError = error => {
-    // In this case, you might want to report the error to your error
-    // reporting service, for example Sentry
-    console.warn(error);
-  };
-
-  _handleFinishLoading = () => {
-    this.setState({ isLoadingComplete: true });
-  };
+      >
+        <StatusBar barStyle="light-content" backgroundColor={Colors.background} />
+        <Stack.Navigator initialRouteName="MainMenu" screenOptions={screenOptions}>
+          <Stack.Screen
+            name="MainMenu"
+            component={MainMenuScreen}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="CreateGame"
+            component={CreateGameScreen}
+            options={{ title: 'New Game' }}
+          />
+          <Stack.Screen
+            name="JoinGame"
+            component={JoinGameScreen}
+            options={{ title: 'Join Game' }}
+          />
+          <Stack.Screen
+            name="Game"
+            component={GameScreen}
+            options={{
+              headerShown: false,
+              gestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="GameOver"
+            component={GameOverScreen}
+            options={{
+              title: 'Game Over',
+              headerBackVisible: false,
+              gestureEnabled: false,
+            }}
+          />
+          <Stack.Screen
+            name="ScriptBrowser"
+            component={ScriptBrowserScreen}
+            options={{ title: 'Scripts & Characters' }}
+          />
+          <Stack.Screen
+            name="HowToPlay"
+            component={HowToPlayScreen}
+            options={{ title: 'How to Play' }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GameProvider>
+  );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  statusBarUnderlay: {
-    height: 24,
-    backgroundColor: 'rgba(0,0,0,0.2)',
-  },
-  notification: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 64,
-    width: "100%",
-    zIndex: 500,
-  }
-});

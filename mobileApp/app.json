@@ -1,21 +1,26 @@
 {
   "expo": {
-    "name": "mobileApp",
-    "description": "A very interesting project.",
-    "slug": "mobileApp",
-    "privacy": "public",
-    "sdkVersion": "25.0.0",
-    "platforms": ["ios", "android"],
+    "name": "Blood on the Clocktower",
+    "slug": "blood-on-the-clocktower",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "dark",
     "splash": {
-      "image": "./assets/images/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#1a0a2e"
     },
+    "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.botc.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1a0a2e"
+      },
+      "package": "com.botc.app"
+    },
+    "web": {
+      "bundler": "metro"
     }
   }
 }
