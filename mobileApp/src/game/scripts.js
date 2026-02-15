@@ -82,12 +82,10 @@ export const SCRIPTS = {
       'evil_twin',
       'witch',
       'cerenovus',
-      'pukka',
       'clockmaker',
       'dreamer',
       'seamstress',
       'mathematician',
-      'spy',
     ],
     otherNightOrder: [
       'philosopher',

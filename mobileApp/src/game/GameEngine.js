@@ -291,6 +291,9 @@ export function startNightPhase(gameState) {
       poisoned: false,
       protected: false,
       nightInfo: null,
+      reminders: (p.reminders || []).filter(r =>
+        !r.startsWith('Cursed') && r !== 'Survives execution'
+      ),
     })),
     gameLog: [
       ...gameState.gameLog,
@@ -1104,9 +1107,6 @@ export function endNight(gameState) {
       hasBeenNominated: false,
       hasNominated: false,
       nominations: 0,
-      reminders: (p.reminders || []).filter(r =>
-        !r.startsWith('Cursed') && r !== 'Survives execution'
-      ),
     })),
     nominations: [],
     currentNomination: null,
