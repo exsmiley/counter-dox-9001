@@ -73,6 +73,10 @@ function runNominationAndVote(state, nominatorName, nomineeName, voterNames) {
 }
 
 describe('Special Cross-Role Interactions', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   describe('Drunk + Poisoner Interaction', () => {
     test('Drunk Empath gets unreliable info even without being poisoned', () => {
       let state = createFixedGame([
@@ -501,9 +505,14 @@ describe('Special Cross-Role Interactions', () => {
 
       const bob = state.players.find(p => p.name === 'Bob');
       const dave = state.players.find(p => p.name === 'Dave');
+
+      // Mock Math.random only during processNightAction to pick first target for drunk
+      const mockRandom = jest.spyOn(Math, 'random').mockReturnValue(0);
       state = processNightAction(state, 'innkeeper', {
         targetIds: [bob.id, dave.id],
       });
+      mockRandom.mockRestore();
+
       console.log(snapshotGameState(state, 'Innkeeper protects Bob and Dave'));
 
       const updatedBob = state.players.find(p => p.name === 'Bob');
@@ -511,8 +520,8 @@ describe('Special Cross-Role Interactions', () => {
       // Both should be protected
       expect(updatedBob.protected).toBe(true);
       expect(updatedDave.protected).toBe(true);
-      // One should be drunk
-      expect(updatedBob.drunk || updatedDave.drunk).toBe(true);
+      // One should be drunk (Math.random=0 picks first target = Bob)
+      expect(updatedBob.drunk).toBe(true);
     });
   });
 

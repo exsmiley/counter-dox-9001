@@ -53,11 +53,15 @@ function createFixedGame(roleAssignments, scriptId = ScriptId.TROUBLE_BREWING) {
 }
 
 // Helper: run through all night actions automatically
+// Returns state in DAY phase (advanceNightAction auto-calls endNight when done)
 function processAllNightActions(state) {
   const order = getNightOrder(state);
   let s = state;
 
   for (const roleId of order) {
+    // If we've already transitioned to day (from advanceNightAction calling endNight), stop
+    if (s.phase === Phase.DAY) break;
+
     const player = s.players.find(p =>
       (p.role === roleId || p.actualRole === roleId) && p.alive
     );
@@ -88,6 +92,11 @@ function processAllNightActions(state) {
 
     s = processNightAction(s, roleId, action);
     s = advanceNightAction(s);
+  }
+
+  // Ensure we're in day phase
+  if (s.phase !== Phase.DAY) {
+    s = endNight(s);
   }
 
   return s;
@@ -178,7 +187,7 @@ describe('Full Gameplay Simulations', () => {
 
       // advanceNightAction auto-calls endNight when actions are exhausted
       if (state.phase !== Phase.DAY) {
-        state = endNight(state);
+        if (state.phase !== Phase.DAY) state = endNight(state);
       }
       snap(state, 'DAY 1: Dawn (no kills first night for Imp)');
 
@@ -240,7 +249,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 1: After first night'));
 
       // === DAY 1 === Town mislynches Charlie
@@ -270,7 +279,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 2: Bob (Soldier, poisoned) killed'));
 
       expect(state.players.find(p => p.name === 'Bob').alive).toBe(false);
@@ -289,7 +298,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 3: Alice killed, only 2 alive'));
 
       // Check: 2 players alive (Dave=poisoner, Eve=imp)
@@ -323,7 +332,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 1: After night 1'));
 
       // Day 1: no execution
@@ -337,7 +346,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 2: Grace (old Imp) dead, Poisoner is new Imp'));
 
       expect(state.players.find(p => p.name === 'Grace').alive).toBe(false);
@@ -379,7 +388,7 @@ describe('Full Gameplay Simulations', () => {
         state = advanceNightAction(state);
       }
       if (state.phase !== Phase.DAY) {
-        state = endNight(state);
+        if (state.phase !== Phase.DAY) state = endNight(state);
       }
       console.log(snapshotGameState(state, 'DAY 1: Alice is cursed'));
 
@@ -411,7 +420,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 1: After first night'));
 
       // Day 1: Mislynch Alice
@@ -428,7 +437,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 2: Po passed (charging up)'));
 
       // Day 2: no execution
@@ -446,7 +455,7 @@ describe('Full Gameplay Simulations', () => {
         state = processNightAction(state, state.pendingNightAction, {});
         state = advanceNightAction(state);
       }
-      state = endNight(state);
+      if (state.phase !== Phase.DAY) state = endNight(state);
       console.log(snapshotGameState(state, 'DAY 3: Po triple kill!'));
 
       const alive = state.players.filter(p => p.alive);
@@ -480,7 +489,7 @@ describe('Full Gameplay Simulations', () => {
       state = startNightPhase(state);
       state = processAllNightActions(state);
       if (state.phase !== Phase.DAY) {
-        state = endNight(state);
+        if (state.phase !== Phase.DAY) state = endNight(state);
       }
       console.log(snapshotGameState(state, 'RANDOM GAME: After night 1'));
 
@@ -513,7 +522,7 @@ describe('Full Gameplay Simulations', () => {
         state = startNextNight(state);
         state = processAllNightActions(state);
         if (state.phase !== Phase.DAY && state.winner === null) {
-          state = endNight(state);
+          if (state.phase !== Phase.DAY) state = endNight(state);
         }
         state = checkWinConditions(state);
         if (state.winner) break;
