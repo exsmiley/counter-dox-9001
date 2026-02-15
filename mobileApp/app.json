@@ -21,6 +21,9 @@
     },
     "web": {
       "bundler": "metro"
+    },
+    "experiments": {
+      "baseUrl": "/counter-dox-9001"
     }
   }
 }
